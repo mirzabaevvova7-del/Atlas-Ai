@@ -1,6 +1,7 @@
 package com.megapolis.atlasai
 
 import android.app.Activity
+import android.graphics.Color
 import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
