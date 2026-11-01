@@ -197,6 +197,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             return
         }
         when {
+            text == "тимур" || text == "ти мур" || text == "timur" || text == "тимур привет" || text == "тимур салом" -> {
+                respond("Лаббай, эшитяпман. Буйруқ беринг.")
+            }
             text.contains("telegram") || text.contains("телеграм") -> openApp("org.telegram.messenger", "Telegram")
             text.contains("youtube") || text.contains("ютуб") -> openApp("com.google.android.youtube", "YouTube")
             text.contains("браузер") || text.contains("интернет") || text.contains("browser") -> {
