@@ -6,8 +6,8 @@
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:label="Timur"
+        android:icon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
-        <meta-data android:name="com.google.android.actions" android:resource="@xml/shortcuts" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
