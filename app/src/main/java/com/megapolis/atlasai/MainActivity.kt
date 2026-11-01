@@ -24,51 +24,129 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun buildScreen() {
+        val navy = Color.rgb(5, 13, 31)
+        val blue = Color.rgb(0, 130, 235)
+        val cyan = Color.rgb(35, 195, 255)
+        val muted = Color.rgb(165, 190, 220)
+        fun panel(color: Int, radius: Float, border: Int = Color.TRANSPARENT) =
+            android.graphics.drawable.GradientDrawable().apply {
+                setColor(color); cornerRadius = radius
+                if (border != Color.TRANSPARENT) setStroke(1, border)
+            }
+        fun text(value: String, size: Float, color: Int, bold: Boolean = false) =
+            TextView(this).apply {
+                text = value; textSize = size; setTextColor(color)
+                if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }
+        window.statusBarColor = navy
+        window.navigationBarColor = navy
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(24, 30, 24, 24)
+            setPadding(22, 28, 22, 28)
+            setBackgroundColor(navy)
         }
-        page.addView(TextView(this).apply {
-            text = "ATLAS AI"
-            textSize = 32f
-            gravity = Gravity.CENTER
-            setPadding(0, 8, 0, 4)
-        })
-        page.addView(TextView(this).apply {
-            text = "Шахсий овозли ёрдамчи"
-            textSize = 14f
-            gravity = Gravity.CENTER
-        })
-        status = TextView(this).apply {
-            text = "Тайёр. Микрофон тугмасини босинг."
-            textSize = 16f
-            gravity = Gravity.CENTER
-            setPadding(0, 24, 0, 18)
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
-        page.addView(status)
+        val logo = text("T", 30f, Color.WHITE, true).apply {
+            gravity = Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(blue, cyan)).apply { cornerRadius = 22f }
+        }
+        header.addView(logo, LinearLayout.LayoutParams(58, 58))
+        val brand = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(14, 0, 0, 0)
+            addView(text("TIMUR", 25f, Color.WHITE, true))
+            addView(text("Шахсий AI ёрдамчи", 12f, muted))
+        }
+        header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
+        val lang = text("UZ  ⇄  RU", 13f, cyan, true).apply {
+            setPadding(12, 12, 12, 12); gravity = Gravity.CENTER
+            background = panel(Color.rgb(13, 29, 55), 30f, Color.rgb(30, 90, 145))
+            setOnClickListener {
+                language = if (language == "uz") "ru" else "uz"
+                tts.language = if (language == "ru") Locale("ru", "RU") else Locale("uz", "UZ")
+                this.text = if (language == "uz") "UZ  ⇄  RU" else "RU  ⇄  UZ"
+                speak(if (language == "ru") "Русский язык выбран" else "Ўзбек тили танланди")
+            }
+        }
+        header.addView(lang)
+        page.addView(header)
+
+        val hero = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+            setPadding(18, 26, 18, 24)
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(12, 47, 91), Color.rgb(9, 21, 45))).apply {
+                cornerRadius = 30f; setStroke(1, Color.rgb(25, 93, 150))
+            }
+        }
+        val orb = text("T", 56f, Color.WHITE, true).apply {
+            gravity = Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(blue, cyan)).apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setStroke(4, Color.rgb(110, 225, 255))
+            }
+        }
+        hero.addView(orb, LinearLayout.LayoutParams(132, 132))
+        hero.addView(text("TIMUR СИЗНИ ТИНГЛАЯПТИ", 12f, cyan, true).apply {
+            gravity = Gravity.CENTER; setPadding(0, 20, 0, 8)
+        })
+        status = text("Тайёрман. Менга буйруқ беринг.", 17f, Color.WHITE, true).apply {
+            gravity = Gravity.CENTER; setPadding(8, 4, 8, 8)
+        }
+        hero.addView(status)
+        hero.addView(text("Микрофон тугмасини босиб гапиринг", 12f, muted).apply {
+            gravity = Gravity.CENTER
+        })
+        page.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 24 })
+
+        val mic = text("🎙   ГАПИРИШ", 17f, Color.WHITE, true).apply {
+            gravity = Gravity.CENTER; setPadding(16, 18, 16, 18)
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(blue, Color.rgb(0, 190, 235))).apply { cornerRadius = 28f }
+            setOnClickListener { startListening() }
+        }
+        page.addView(mic, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 18 })
+        val inputCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; setPadding(16, 14, 16, 14)
+            background = panel(Color.rgb(13, 27, 54), 22f, Color.rgb(30, 58, 93))
+        }
+        inputCard.addView(text("МАТНЛИ БУЙРУҚ", 11f, cyan, true))
         commandInput = EditText(this).apply {
-            hint = "Буйруқни шу ерга ёзинг..."
-            minLines = 2
+            hint = "Масалан: Telegram’ни оч"; setHintTextColor(muted)
+            setTextColor(Color.WHITE); textSize = 15f; minLines = 1; maxLines = 3
+            setPadding(0, 8, 0, 8); background = null
         }
-        page.addView(commandInput, LinearLayout.LayoutParams(-1, -2))
-        addButton(page, "🎙  ГАПИРИШ") { startListening() }
-        addButton(page, "БУЙРУҚНИ БАЖАРИШ") { runCommand(commandInput.text.toString()) }
-        addButton(page, "ЎЗБЕКЧА / РУСЧА") {
-            language = if (language == "uz") "ru" else "uz"
-            tts.language = if (language == "ru") Locale("ru", "RU") else Locale("uz", "UZ")
-            speak(if (language == "ru") "Русский язык выбран" else "Ўзбек тили танланди")
+        inputCard.addView(commandInput)
+        val run = text("БУЙРУҚНИ БАЖАРИШ  →", 13f, Color.WHITE, true).apply {
+            gravity = Gravity.CENTER; setPadding(12, 14, 12, 14)
+            background = panel(Color.rgb(25, 75, 125), 16f)
+            setOnClickListener { runCommand(commandInput.text.toString()) }
         }
+        inputCard.addView(run)
+        page.addView(inputCard, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 16 })
+        page.addView(text("ТЕЗКОР БОШҚАРУ", 12f, muted, true).apply {
+            setPadding(2, 24, 0, 10)
+        })
+        addButton(page, "✈  TELEGRAM") { openApp("org.telegram.messenger", "Telegram") }
+        addButton(page, "▶  YOUTUBE") { openApp("com.google.android.youtube", "YouTube") }
+        addButton(page, "☎  ҚЎНҒИРОҚ") { startActivity(Intent(Intent.ACTION_DIAL)) }
+        addButton(page, "◷  БУДИЛЬНИК") { startActivity(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS)) }
         addButton(page, "ОВОЗНИ КЎТАРИШ") { adjustVolume(true) }
         addButton(page, "ОВОЗНИ ПАСАЙТИРИШ") { adjustVolume(false) }
         addButton(page, "ПАУЗА / ТЎХТАТИШ") {
-            tts.stop()
-            status.text = "ATLAS вақтинча тўхтатилди."
+            tts.stop(); status.text = "Timur вақтинча тўхтатилди."
         }
-        page.addView(TextView(this).apply {
-            text = "Ҳозирги версия: овозли буйруқлар илова очиқ турганида ишлайди. Экран ўчганда «ATLAS» деб уйғотиш ва AI интернет хизмати кейинги босқичда қўшилади."
-            textSize = 12f
-            setPadding(0, 22, 0, 0)
+        page.addView(text("TIMUR  •  СИЗНИНГ ОВОЗЛИ ЁРДАМЧИНГИЗ", 10f, muted).apply {
+            gravity = Gravity.CENTER; setPadding(0, 24, 0, 0)
         })
         setContentView(ScrollView(this).apply { addView(page) })
     }
@@ -76,8 +154,15 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun addButton(parent: LinearLayout, label: String, action: () -> Unit) {
         parent.addView(Button(this).apply {
             text = label
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(Color.rgb(13, 32, 61))
+                cornerRadius = 22f
+                setStroke(1, Color.rgb(30, 80, 130))
+            }
             setOnClickListener { action() }
-        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 8 })
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 9 })
     }
 
     private fun startListening() {
