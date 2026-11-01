@@ -5,8 +5,9 @@
     <application
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
-        android:label="ATLAS AI"
+        android:label="Timur"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <meta-data android:name="com.google.android.actions" android:resource="@xml/shortcuts" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
