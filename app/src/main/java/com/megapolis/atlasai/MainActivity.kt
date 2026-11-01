@@ -139,8 +139,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         })
         addButton(page, "✈  TELEGRAM") { openApp("org.telegram.messenger", "Telegram") }
         addButton(page, "▶  YOUTUBE") { openApp("com.google.android.youtube", "YouTube") }
-        addButton(page, "☎  ҚЎНҒИРОҚ") { startActivity(Intent(Intent.ACTION_DIAL)) }
-        addButton(page, "◷  БУДИЛЬНИК") { startActivity(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS)) }
+        addButton(page, "☎  ҚЎНҒИРОҚ") { safeLaunch(Intent(Intent.ACTION_DIAL), "Қўнғироқ ойнаси очилди.", "Қўнғироқ ойнасини очиб бўлмади.") }
+        addButton(page, "◷  БУДИЛЬНИК") { safeLaunch(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS), "Будильник очилди.", "Будильник иловаси топилмади.") }
         addButton(page, "ОВОЗНИ КЎТАРИШ") { adjustVolume(true) }
         addButton(page, "ОВОЗНИ ПАСАЙТИРИШ") { adjustVolume(false) }
         addButton(page, "ПАУЗА / ТЎХТАТИШ") {
@@ -200,20 +200,16 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             text.contains("telegram") || text.contains("телеграм") -> openApp("org.telegram.messenger", "Telegram")
             text.contains("youtube") || text.contains("ютуб") -> openApp("com.google.android.youtube", "YouTube")
             text.contains("браузер") || text.contains("интернет") || text.contains("browser") -> {
-                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com")))
-                respond("Браузер очилди.")
+                safeLaunch(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com")), "Браузер очилди.", "Браузерни очиб бўлмади.")
             }
             text.contains("смс") || text.contains("хабар") || text.contains("sms") -> {
-                startActivity(Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("smsto:")))
-                respond("SMS ёзиш ойнаси очилди.")
+                safeLaunch(Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("smsto:")), "SMS ёзиш ойнаси очилди.", "SMS иловаси топилмади.")
             }
             text.contains("қўнғироқ") || text.contains("телефон") || text.contains("звон") || text.contains("call") -> {
-                startActivity(Intent(Intent.ACTION_DIAL))
-                respond("Қўнғироқ қилиш ойнаси очилди.")
+                safeLaunch(Intent(Intent.ACTION_DIAL), "Қўнғироқ қилиш ойнаси очилди.", "Қўнғироқ ойнасини очиб бўлмади.")
             }
             text.contains("будильник") || text.contains("алярм") || text.contains("alarm") -> {
-                startActivity(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS))
-                respond("Будильник очилди.")
+                safeLaunch(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS), "Будильник очилди.", "Будильник иловаси топилмади.")
             }
             text.contains("овозни кўтар") || text.contains("громче") -> adjustVolume(true)
             text.contains("овозни пасайт") || text.contains("тише") -> adjustVolume(false)
@@ -226,11 +222,37 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun openApp(packageName: String, appName: String) {
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-        if (launchIntent != null) {
-            startActivity(launchIntent)
-            respond("$appName очилди.")
-        } else respond("$appName иловаси топилмади.")
+        try {
+            val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+            if (launchIntent != null) {
+                startActivity(launchIntent)
+                respond("$appName очилди.")
+                return
+            }
+        } catch (_: Exception) {
+            // Continue to web fallback.
+        }
+        val webUrl = when (packageName) {
+            "com.google.android.youtube" -> "https://www.youtube.com"
+            "org.telegram.messenger" -> "https://t.me"
+            else -> null
+        }
+        if (webUrl != null) {
+            safeLaunch(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(webUrl)), "$appName ҳаволаси очилди.", "$appName очилмади. Браузер мавжудлигини текширинг.")
+        } else {
+            respond("$appName иловаси топилмади.")
+        }
+    }
+
+    private fun safeLaunch(intent: Intent, successMessage: String, errorMessage: String) {
+        try {
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+                respond(successMessage)
+            } else respond(errorMessage)
+        } catch (_: Exception) {
+            respond(errorMessage)
+        }
     }
 
     private fun adjustVolume(up: Boolean) {
