@@ -44,8 +44,8 @@ jobs:
       - name: Publish APK as release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: atlas-ai-v1.0.1
-          name: ATLAS AI Android v1.0.1 (security review build)
-          body: "Синов версияси. Manifest рухсатлари чекланган, очиқ матнли HTTP трафик ўчирилган. Debug signing; Google Play Protect тасдиғи эмас."
+          tag_name: timur-v1.0.2
+          name: Timur Android v1.0.2 (security review build)
+          body: "Timur синов версияси. Manifest рухсатлари чекланган, очиқ матнли HTTP трафик ўчирилган. Debug signing; Google Play Protect тасдиғи эмас."
           files: app/build/outputs/apk/debug/app-debug.apk
           make_latest: true
